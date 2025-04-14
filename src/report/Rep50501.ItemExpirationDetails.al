@@ -44,16 +44,23 @@ report 50501 "Item Expiration Details"
             {
             }
 
+            // trigger OnPreDataItem()
+            // begin
+            //     // Apply the Expiration Date filter if provided
+            //     if ExpirationDateFilter <> 0D then begin
+            //         SetRange("Expiration Date", ExpirationDateFilter);
+            //     end
+            //     else begin
+            //         // SixMonthsLater := WorkDate + 6 * 30;
+            //         // SetRange("Expiration Date", WorkDate, SixMonthsLater);
+            //     end;
+            // end;
             trigger OnPreDataItem()
             begin
-                // Apply the Expiration Date filter if provided
-                if ExpirationDateFilter <> 0D then begin
-                    SetRange("Expiration Date", ExpirationDateFilter);
-                end
-                else begin
-                    // SixMonthsLater := WorkDate + 6 * 30;
-                    // SetRange("Expiration Date", WorkDate, SixMonthsLater);
-                end;
+                if (StartDate <> 0D) and (EndDate <> 0D) then
+                    SetRange("Expiration Date", StartDate, EndDate)
+                else
+                    Clear("Expiration Date"); // No filter if both dates are blank
             end;
         }
     }
@@ -66,7 +73,12 @@ report 50501 "Item Expiration Details"
                 group(Group)
                 {
                     Caption = 'Filter Options';
-                    field("Expiration Date Filter"; ExpirationDateFilter)
+                    field("Expiration From Date"; startDate)
+                    {
+                        ApplicationArea = All;
+                        ToolTip = 'Enter the date range for which you want to view expiring items.';
+                    }
+                    field("Expiration To Date"; endDate)
                     {
                         ApplicationArea = All;
                         ToolTip = 'Enter the date range for which you want to view expiring items.';
@@ -85,9 +97,15 @@ report 50501 "Item Expiration Details"
     {
         Label1 = 'Items Expiration Details Report';
     }
+    trigger OnInitReport()
+    begin
+        StartDate := WorkDate;
+        EndDate := CalcDate('<6M>', WorkDate); // 6 months ahead
+    end;
 
     var
-        ExpirationDateFilter: Date;
+        startDate: Date;
+        endDate: Date;
         SixMonthsLater: Date;
         ReportName: Label 'Items Expiration Details';
 }
